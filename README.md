@@ -1,4 +1,4 @@
 # e-paper75
 
 This code is under construction.
-Due to refreshing problems using ESPhome I will remove the data that needs to be regularly updated.
+Due to the "malfunction" with refreshing of the display using ESPHome I will remove the sensor data that needs to be regularly updated. Perhaps add calendar entries instead....
