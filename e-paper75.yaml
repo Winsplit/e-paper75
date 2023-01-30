@@ -1,0 +1,233 @@
+esphome:
+  name: e-paper75
+  on_boot:
+      priority: 200.0
+      then:
+        - component.update: eink_display
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: !secret api_encryption
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: !secret ap_ssid
+    password: !secret ap_password
+
+captive_portal:
+
+time:
+  - platform: homeassistant
+    id: homeassistant_time
+    timezone: Europe/Stockholm
+    on_time:
+      # Every 5 minutes
+      - seconds: 0
+        minutes: /5
+        then:
+          - component.update: eink_display
+
+#Include sun
+sun:
+  latitude: !secret sun_latitude
+  longitude: !secret sun_longitude
+
+# Temperature
+sensor:
+  - platform: homeassistant
+    id: temp_out_min
+    entity_id: sensor.temp_ute_min
+    internal: true
+  - platform: homeassistant
+    id: temp_out_max
+    entity_id: sensor.temp_ute_max
+    internal: true
+
+# Wind
+  - platform: homeassistant
+    id: wind_min
+    entity_id: sensor.smhi_obs_nu_vind_71420
+    internal: true
+  - platform: homeassistant
+    id: wind_max
+    entity_id: sensor.smhi_obs_nu_byvind_71420
+    internal: true
+
+# Wind chill
+  - platform: homeassistant
+    id: wind_chill_max
+    entity_id: sensor.temp_ute_min_kyleffekt
+    internal: true
+  - platform: homeassistant
+    id: wind_chill_min
+    entity_id: sensor.temp_ute_min_kyleffekt_medel
+    internal: true
+
+# Precipitation
+  - platform: homeassistant
+    id: precipitation_now
+    entity_id: sensor.precipitation_goteborg
+    internal: true
+
+# Fuel level car
+  - platform: homeassistant
+    id: fuel_level
+    entity_id: sensor.car_fuel_level
+    internal: true
+
+# Text sensors
+text_sensor:
+
+# Wind direction text
+  - platform: homeassistant
+    id: wind_direction_text
+    entity_id: sensor.fiskhamnsmotet_wind_direction_text
+    internal: true
+
+# School lunch
+  - platform: homeassistant
+    id: skolmat_today
+    entity_id: skolmat.school
+    internal: true
+
+  # Sunrise
+  - platform: sun
+    type: sunrise
+    id: sun_sunrise
+    format: "%H:%M"
+  # Sunset
+  - platform: sun
+    type: sunset
+    id: sun_sunset
+    format: "%H:%M"
+
+# Icons
+# https://pictogrammers.com/library/mdi/
+font:
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: mdi_small
+    size: 36
+    glyphs:
+      - "\U000F025A" # food - Shool lunch
+      - "\U000F0298" # gas-station - Fuel level car
+      - "\U000F059D" # weather-windy - wind speed
+      - "\U000F023F" # flag-triangle - wind direction
+      - "\U000F0597" # rainy - Precipitation
+      - "\U000F050F" # mdi-thermometer - Temperature
+      - "\U000F05A8" # white-balance-sunny - Sunrise
+      - "\U000F0594" # weather-night - Sunset
+      - "\U000F059E" # weather-windy-variant - Wind chill
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: mdi_large
+    size: 60
+    glyphs:
+      - "\U000F0595" # partly-cloudy - Weather
+
+# gfonts://family[@weight]
+  - file: "gfonts://Open Sans"
+    id: text_small
+    size: 36
+    glyphs: ['&', '@', '!', ',', '.', '"', '%', '(', ')', '+', '-', '_', ':', '°', '0',
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+        'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+        'T', 'U', 'V', 'W', 'X', 'Y', 'Z','Å','Ä','Ö', ' ', 'a', 'b', 'c', 'd', 'e', 'f',
+        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+        'u', 'v', 'w', 'x', 'y', 'z','å', 'ä', 'ö', '/']
+
+globals:
+  - id: offset_y1
+    restore_value: no
+    initial_value: "80"
+    type: int
+  - id: offset_y2
+    restore_value: no
+    initial_value: "30"
+    type: int
+  - id: offset_row_y1
+    restore_value: no
+    initial_value: "60"
+    type: int
+  - id: offset_x1
+    restore_value: no
+    initial_value: "70"
+    type: int
+  - id: offset_x2
+    restore_value: no
+    initial_value: "130"
+    type: int
+
+# Pins for Waveshare ePaper ESP Board
+spi:
+  clk_pin: GPIO13
+  mosi_pin: GPIO14
+
+# Now render everything on the ePaper screen.
+display:
+  - platform: waveshare_epaper
+    id: eink_display
+    cs_pin: GPIO15
+    dc_pin: GPIO27
+    busy_pin: GPIO25
+    reset_pin: GPIO26
+    reset_duration: 2ms
+    model: 7.50inV2
+    update_interval: 5min
+    rotation: 90°
+    lambda: |-
+      // Create a black background sqare that fills the display
+      #define xres 480 
+      #define yres 800
+      it.filled_rectangle(0, 0, xres, yres, COLOR_ON);
+
+      // weather icon
+      it.print(20, 20 + id(offset_y2), id(mdi_large), COLOR_OFF, TextAlign::TOP_LEFT , "\U000F0595");
+      // Horizontal line divider
+      it.filled_rectangle(90, 50 + id(offset_y2), 300, 3, COLOR_OFF);
+      
+      // Temperature
+      it.print(id(offset_x1), 1 * id(offset_row_y1) + id(offset_y1), id(mdi_small), COLOR_OFF, TextAlign::CENTER_LEFT , "\U000F050F");
+      it.printf(id(offset_x2), 1 * id(offset_row_y1) + id(offset_y1), id(text_small), COLOR_OFF, TextAlign::CENTER_LEFT, "%.1f till %.1f°C", id(temp_out_min).state, id(temp_out_max).state);
+      // Wind
+      it.print(id(offset_x1), 2 * id(offset_row_y1) + id(offset_y1), id(mdi_small), COLOR_OFF, TextAlign::CENTER_LEFT , "\U000F059D");
+      it.printf(id(offset_x2), 2 * id(offset_row_y1) + id(offset_y1), id(text_small), COLOR_OFF, TextAlign::CENTER_LEFT, "%.1f - %.1f m/s", id(wind_min).state, id(wind_max).state);
+      // Wind chill
+      it.print(id(offset_x1), 3 * id(offset_row_y1) + id(offset_y1), id(mdi_small), COLOR_OFF, TextAlign::CENTER_LEFT , "\U000F059E");
+      it.printf(id(offset_x2), 3 * id(offset_row_y1) + id(offset_y1), id(text_small), COLOR_OFF, TextAlign::CENTER_LEFT, "%.1f till %.1f°C", id(wind_chill_max).state, id(wind_chill_min).state);
+      // Wind direction
+      it.print(id(offset_x1), 4 * id(offset_row_y1) + id(offset_y1), id(mdi_small), COLOR_OFF, TextAlign::CENTER_LEFT , "\U000F023F");
+      it.printf(id(offset_x2), 4 * id(offset_row_y1) + id(offset_y1), id(text_small), COLOR_OFF, TextAlign::CENTER_LEFT, "%s", id(wind_direction_text).state.c_str());
+      // Precipitation
+      it.print(id(offset_x1), 5 * id(offset_row_y1) + id(offset_y1), id(mdi_small), COLOR_OFF, TextAlign::CENTER_LEFT , "\U000F0597");
+      it.printf(id(offset_x2), 5 * id(offset_row_y1) + id(offset_y1), id(text_small), COLOR_OFF, TextAlign::CENTER_LEFT, "%.1f mm", id(precipitation_now).state);
+      // Sunrise
+      it.print(id(offset_x1), 6 * id(offset_row_y1) + id(offset_y1), id(mdi_small), COLOR_OFF, TextAlign::CENTER_LEFT , "\U000F05A8");
+      it.printf(id(offset_x2), 6 * id(offset_row_y1) + id(offset_y1), id(text_small), COLOR_OFF, TextAlign::CENTER_LEFT, "%s", id(sun_sunrise).state.c_str());
+      // Sunset
+      it.print(id(offset_x1), 7 * id(offset_row_y1) + id(offset_y1), id(mdi_small), COLOR_OFF, TextAlign::CENTER_LEFT , "\U000F0594");
+      it.printf(id(offset_x2), 7 * id(offset_row_y1) + id(offset_y1), id(text_small), COLOR_OFF, TextAlign::CENTER_LEFT, "%s", id(sun_sunset).state.c_str());
+
+      // Horizontal line divider
+      it.filled_rectangle(20, 8 * id(offset_row_y1) + id(offset_y1) + 20, 400, 3, COLOR_OFF);
+      
+      // Fuel level car
+      it.print(id(offset_x1), 9 * id(offset_row_y1) + id(offset_y1), id(mdi_small), COLOR_OFF, TextAlign::CENTER_LEFT , "\U000F0298");
+      it.printf(id(offset_x2), 9 * id(offset_row_y1) + id(offset_y1), id(text_small), COLOR_OFF, TextAlign::CENTER_LEFT, "%.0f%%", id(fuel_level).state);
+      // School lunch
+      it.print(id(offset_x1), 10 * id(offset_row_y1) + id(offset_y1), id(mdi_small), COLOR_OFF, TextAlign::CENTER_LEFT , "\U000F025A");
+      it.printf(id(offset_x2), 10 * id(offset_row_y1) + id(offset_y1), id(text_small), COLOR_OFF, TextAlign::CENTER_LEFT, "%s", id(skolmat_today).state.c_str());
