@@ -1,6 +1,8 @@
 # e-paper75
 
-I stopped working on this due to the fact that Waveshare e-paper displays do not work so well with information that regularly needs to be refreshed. When the display is refreshing it blinks a couple of times and it is really annoying.Now I will use the display for information that does not need to be refreshed so often......
+I stopped working on this due to the fact that Waveshare e-paper displays do not work so well with information that regularly needs to be refreshed. When the display is refreshing it blinks a couple of times and it is really annoying.
+
+Now I will use the display for information that does not need to be refreshed so often......
 
 
 Software, ESPHome
