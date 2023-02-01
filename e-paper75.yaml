@@ -159,7 +159,6 @@ display:
     busy_pin: GPIO25
     reset_pin: GPIO26
     reset_duration: 2ms
-    # Testat "7.50in-bV2", men då visades inget på skärmen.
     model: 7.50inV2
     update_interval: 5min
     rotation: 90°
