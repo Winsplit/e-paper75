@@ -2,8 +2,10 @@
 
 This code is under construction.
 
-Due to the "malfunction" with refreshing of the display using ESPHome I will remove the sensor data that needs to be regularly updated. Perhaps add calendar entries instead....
+I stopped working on this due to the fact that Waveshare e-paper displays do not work so well with information that regularly needs to be refreshed. When the display is refreshing it blinks a couple of times and it is really annoying.Now I will use the display for information that does not need to be refreshed so often......
 
+
+Software, ESPHome
 
 Hardware
 
